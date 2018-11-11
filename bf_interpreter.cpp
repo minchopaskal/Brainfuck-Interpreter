@@ -9,7 +9,7 @@
 #define MEMSIZE 30000
 #endif
 
-BFInterpreter::BFInterpreter(const char *program, std::istream *input, std::ostream *output) :
+BFInterpreter::BFInterpreter(const char *program, std::istream &input, std::ostream &output) :
   memory_blocks(nullptr), p(nullptr),
   program(nullptr), input(input), output(output),
   memory_size(MEMSIZE) {
@@ -55,7 +55,7 @@ void BFInterpreter::compile() {
     }
     ++pp;
   }
-  printf("\n");
+  output.put('\n');
 }
 
 void BFInterpreter::loop() {
@@ -93,10 +93,10 @@ void BFInterpreter::proccessNonLoopCmd(char c) {
     --*p;
     break;
   case '.':
-    output->put(*p);
+    output.put(*p);
     break;
   case ',':
-    *p = input->get();
+    *p = input.get();
     break;
   case '<':
     if (p == memory_blocks)

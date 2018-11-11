@@ -9,7 +9,7 @@ class BFInterpreter {
 public:
   using uchar = unsigned char;
   
-  BFInterpreter(const char *program, std::istream *input = &std::cin, std::ostream *output = &std::cout);
+  BFInterpreter(const char *program, std::istream &input = std::cin, std::ostream &output = std::cout);
   ~BFInterpreter();
 
   void compile();
@@ -20,8 +20,8 @@ private:
   void proccessNonLoopCmd(char c);
   
 private:
-  std::istream *input;
-  std::ostream *output;
+  std::istream &input;
+  std::ostream &output;
   size_t memory_size;
   
   uchar *memory_blocks;

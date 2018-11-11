@@ -1,9 +1,11 @@
 #include "bf_interpreter.h"
+#include "CLI11.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <sstream>
+#include <string>
 
 #define USAGE_MSG \
   "Usage %s [-f <code file> | -c <code>] (-i <input file>) (-o <output file>)\n" \
@@ -13,60 +15,51 @@
 // TODO: implement proper CLI parsing
 // TODO: https://github.com/CLIUtils/CLI11
 int main(int argc, char **argv) {
-  if (argc < 3 || argc % 2 == 0) {
-    std::cout << USAGE_MSG;
-  }
+  CLI::App app {"Simple Brainfuck interpreter written for "
+                "IPL course homework from FMI, SU, 2018." };
+
+  std::string srcFile;
+  CLI::Option *srcFileOpt = app.add_option("-f,--file", srcFile, "Brainfuck source file");
+
+  srcFileOpt->check(CLI::ExistingFile);
+  
+  std::string srcCode;
+  CLI::Option *srcCodeOpt = app.add_option("-c,--code", srcCode, "Brainfuck source code");
+
+  srcFileOpt->excludes(srcCodeOpt);
+  srcCodeOpt->excludes(srcFileOpt);
+
+  std::string output;
+  CLI::Option *outputOpt = app.add_option("-o,--output", output, "File to write the Brainfuck output to. Optional.");
+
+  std::string input;
+  CLI::Option *inputOpt = app.add_option("-i,--input", input, "File to take the Brainfuck input from. Optional.");
+
+  inputOpt->check(CLI::ExistingFile);
+
+  CLI11_PARSE(app, argc, argv);
 
   std::string source;
-  std::istream *is = &std::cin;
-  std::ostream *os = &std::cout;
-  bool file = false, code = false;
-  for (int i = 1; i < argc; ++i) {
-    if (argv[i][0] == '-') {
-      if (argv[i][2] != '\0') {
-        std::cout << USAGE_MSG;
-        return 1;
-      }
-      
-      switch (argv[i][1]) {
-      case 'f':
-        if (code) {
-          std::cout << USAGE_MSG;
-          return 1;
-        }
-        source = argv[++i];
-        file = true;
-        break;
-      case 'c':
-        if (file) {
-          std::cout << USAGE_MSG;
-          return 1;
-        }
-        code = true;
-        source = argv[++i];
-        break;
-      case 'i':
-        is =  new std::ifstream {argv[++i]};
-        break;
-      case 'o':
-        os = new std::ofstream {argv[++i]};        
-        break;
-      default:
-        std::cout << USAGE_MSG;
-        return 1;
-      }
-      
-    } else {
-      std::cout << USAGE_MSG;
-      return 1;
+  if (*srcFileOpt) {
+    std::ifstream file {srcFile};
+    if (file.is_open()) {
+      source.assign((std::istreambuf_iterator<char>(file)),
+                    std::istreambuf_iterator<char>());
     }
+  } else {
+    source = srcCode;
   }
 
-  if (file) {
-    std::ifstream file {source.c_str()};
-    source.assign((std::istreambuf_iterator<char>(file)),
-                  std::istreambuf_iterator<char>());
-  }
+  std::ifstream inputFile;
+  if (*inputOpt)
+    inputFile.open(input);
+  
+  std::ofstream outputFile;
+  if (*outputOpt)
+    outputFile.open(output);  
+  
+  std::istream &is = *inputOpt ? inputFile : std::cin;
+  std::ostream &os = *outputOpt ? outputFile : std::cout;
   
   BFInterpreter bfi{source.c_str(), is, os};
   bfi.compile();
