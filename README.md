@@ -1,8 +1,13 @@
 # Brainfuck-Interpreter
 Simple Brainfuck interpreter written for IPL course homework from FMI, SU, 2018.
+<<<<<<< HEAD
 
 Uses default memory size of 30000 cells but if you define `#MEMSIZE` with your compiler to something else you can get different size.
 
+=======
+Uses default memory size of 30000 cells but if you define #MEMSIZE with your
+compiler to something else you can get different size.
+>>>>>>> cbb26ee681b86c9e74aec88a2de4861f746af688
 When either > or < instructions overflow the cell pointer, the latter just wraps
 around.
 
