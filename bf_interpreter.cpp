@@ -1,114 +1,84 @@
 #include "bf_interpreter.h"
 
+#include <cassert>
 #include <cmath>
 #include <cstring>
-#include <iostream>
-#include <stack>
 
 #ifndef MEMSIZE
 #define MEMSIZE 30000
 #endif
 
 BFInterpreter::BFInterpreter(const char *program, std::istream &input, std::ostream &output) :
-  memory_blocks(nullptr), p(nullptr),
-  program(nullptr), input(input), output(output),
-  memory_size(MEMSIZE) {
+  m_MemoryBlocks(nullptr), m_Head(nullptr),
+  m_Program(nullptr), m_Input(input), m_Output(output),
+  m_MemorySize(MEMSIZE) {
   
-  this->program = new char[strlen(program) + 1];
-  strncpy(this->program, program, strlen(program) + 1);
-  pp = this->program;
+  m_Program = new char[strlen(program) + 1];
+  strncpy(m_Program, program, strlen(program) + 1);
+  m_CurrentInstr = m_Program;
 
-  memory_blocks = new uchar[memory_size];
-  for (int i = 0; i < memory_size; ++i) {
-    memory_blocks[i] = 0;
+  m_MemoryBlocks = new uchar[m_MemorySize];
+  for (int i = 0; i < m_MemorySize; ++i) {
+    m_MemoryBlocks[i] = 0;
   }
-  p = memory_blocks;
+  m_Head = m_MemoryBlocks;
 }
 
-BFInterpreter::~BFInterpreter() {
-  delete [] memory_blocks;
-  delete [] program;
+BFInterpreter::~BFInterpreter()
+{
+  delete [] m_MemoryBlocks;
+  delete [] m_Program;
 }
 
-void BFInterpreter::addMemory() {
-  uchar *new_memory = new uchar[memory_size + ((size_t) log2(memory_size))];
-  for (int i = 0; i < memory_size; ++i) {
-    new_memory[i] = memory_blocks[i];
-  }
-  delete [] memory_blocks;
-  memory_blocks = new_memory;
-  memory_size += log2(memory_size);
-}
-
-void BFInterpreter::compile() {
-  while (*pp) {
-    switch (*pp) {
-    case '[':
-      ++pp;
-      loop();
+void BFInterpreter::compile()
+{
+  while (*m_CurrentInstr)
+  {
+    switch (*m_CurrentInstr)
+    {
+    case '+':
+      ++*m_Head;
       break;
-    case ']': // that will only happen if code is wrong
-      printf("Syntax error!\n");
-      return;
-    default:
-      proccessNonLoopCmd(*pp);
-    }
-    ++pp;
-  }
-  output.put('\n');
-}
-
-void BFInterpreter::loop() {
-  std::stack<char*> loops;
-  loops.push(pp);
-  
-  char *body = loops.top();
-  while (!loops.empty()) {
-    while (*body != ']' && *body != '[') {
-      proccessNonLoopCmd(*body);
-      ++body;
-    }
-    if (*body == ']') {
-      if (!*p) { /* End of a loop */
-        loops.pop();
-        ++body;
-      } else { /* Loop has not ended. Return to the beginning of the current loop */
-        body = loops.top();
+    case '-':
+      --*m_Head;
+      break;
+    case '.':
+      m_Output.put(*m_Head);
+      break;
+    case ',':
+      *m_Head = m_Input.get();
+      break;
+    case '<':
+      if (m_Head == m_MemoryBlocks)
+        m_Head = m_MemoryBlocks + (m_MemorySize - 1);
+      else 
+        --m_Head;
+      break;
+    case '>':
+      if (m_Head == m_MemoryBlocks + (m_MemorySize - 1))
+        m_Head = m_MemoryBlocks;
+      else
+        ++m_Head;
+      break;
+    case '[':
+      m_LoopStack.push(m_CurrentInstr + 1);
+      break;
+    case ']':
+      if (!*m_Head)
+      {
+        assert(!m_LoopStack.empty() && "Closing unopened loop");
+        m_LoopStack.pop();
       }
-    } else { /* Start of a new loop */
-      loops.push(body + 1);
-      ++body;
+      else
+      {
+        m_CurrentInstr = m_LoopStack.top();
+        --m_CurrentInstr;
+      }
+      break;
+    default: // ignore 
+      break;
     }
+    ++m_CurrentInstr;
   }
-  pp = --body;
-  return;
-}
-
-void BFInterpreter::proccessNonLoopCmd(char c) {
-  switch (c) {
-  case '+':
-    ++*p;
-    break;
-  case '-':
-    --*p;
-    break;
-  case '.':
-    output.put(*p);
-    break;
-  case ',':
-    *p = input.get();
-    break;
-  case '<':
-    if (p == memory_blocks)
-      p = memory_blocks + (memory_size - 1);
-    else 
-      --p;
-    break;
-  case '>':
-    if (p == memory_blocks + (memory_size - 1))
-      p = memory_blocks;
-    else
-      ++p;
-    break;
-  }
+  m_Output.put('\n');
 }

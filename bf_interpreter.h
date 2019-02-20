@@ -3,7 +3,7 @@
 
 #include <cstddef>
 #include <iostream>
-
+#include <stack>
 
 class BFInterpreter {
 public:
@@ -15,19 +15,15 @@ public:
   void compile();
 
 private:
-  void addMemory();
-  void loop();
-  void proccessNonLoopCmd(char c);
+  std::istream &m_Input;
+  std::ostream &m_Output;
+  std::stack<char*> m_LoopStack;
+  size_t m_MemorySize;
   
-private:
-  std::istream &input;
-  std::ostream &output;
-  size_t memory_size;
-  
-  uchar *memory_blocks;
-  uchar *p;
-  char *program;
-  char *pp;
+  uchar *m_MemoryBlocks;
+  uchar *m_Head;
+  char *m_Program;
+  char *m_CurrentInstr;
 };
 
 #endif /* BRAINFUCK_INTERPRETER_H */
