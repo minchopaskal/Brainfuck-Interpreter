@@ -64,9 +64,10 @@ void BFInterpreter::compile()
       m_LoopStack.push(m_CurrentInstr + 1);
       break;
     case ']':
+      assert(!m_LoopStack.empty() && "Closing unopened loop");
+      
       if (!*m_Head)
       {
-        assert(!m_LoopStack.empty() && "Closing unopened loop");
         m_LoopStack.pop();
       }
       else
@@ -75,10 +76,77 @@ void BFInterpreter::compile()
         --m_CurrentInstr;
       }
       break;
+    /* Custom instructions */
+    case '!':
+      *m_Head = 0;
+      break;
+    case '^':
+      jumpForwards(*m_Head);   
+      break;
+    case '&':
+      jumpBackwards(*m_Head);
+      break;
+    case '#':
+      if (!*m_Head)
+      {
+        break;
+      }
+
+      jumpForwards(m_Head == m_MemoryBlocks ?
+                   *(m_MemoryBlocks + m_MemorySize - 1) :
+                   *(m_Head - 1));
+      break;
+    case '$':
+      if (!*m_Head)
+      {
+        break;
+      }
+
+      jumpBackwards(m_Head == (m_MemoryBlocks + m_MemorySize - 1) ?
+                    *(m_MemoryBlocks) :
+                    *(m_Head + 1));
+      break;
     default: // ignore 
       break;
     }
     ++m_CurrentInstr;
   }
   m_Output.put('\n');
+#ifdef DEBUG
+#ifdef CELLS_TO_PRINT
+  if (CELLS_TO_PRINT > m_MemorySize) return;
+  
+  for (int i = 0; i < CELLS_TO_PRINT; ++i)
+  {
+    m_Output.put('|');
+    m_Output.put(m_MemoryBlocks[i] + '0');
+    m_Output.put('|');
+  }
+  m_Output.put('\n');
+#endif
+#endif
+}
+
+void BFInterpreter::jumpForwards(int steps)
+{
+  if (m_MemorySize - (m_Head - m_MemoryBlocks) < steps) // overflow
+  {
+    m_Head = m_MemoryBlocks + (steps - (m_MemorySize - (m_Head - m_MemoryBlocks)));
+  }
+  else
+  {
+    m_Head += (int) steps;
+  }
+}
+
+void BFInterpreter::jumpBackwards(int steps)
+{
+  if (m_Head - m_MemoryBlocks < steps) // underflow
+  {
+    m_Head = m_MemoryBlocks + (m_MemorySize - (steps - (m_Head - m_MemoryBlocks)));
+  }
+  else
+  {
+    m_Head -= (int) steps;
+  }
 }

@@ -7,7 +7,7 @@ When either > or < instructions overflow the cell pointer, the latter just wraps
 around.
 
 # Installation
-BFI uses _make_ for make for simplicity.
+BFI uses _make_ for simplicity.
 
 To install simply run:
 ```
@@ -31,10 +31,10 @@ Options:
 # Future
 BFI is planned to be made child-friendly by introducing new instructions like:
 
-* ! - make the current cell value equal to 0.
-* ^ - go to cell No. (current cell No. + current cell value).
-* & - go to cell No. (current cell No. - current cell value).
-* \# - if statement that depends on next value (for comparison) and previous (to use like ^)
-* $ - same as above, but go back, instead of forward.
+* ~~! - make the current cell value equal to 0.~~
+* ~~^ - go to cell No. (current cell No. + current cell value).~~
+* ~~& - go to cell No. (current cell No. - current cell value).~~
+* ~~\# - if statement that depends on current value for comparison and previous is passeed to ^)~~
+* ~~$ - same as above, but go back, instead of forward and pass next value.~~
 
 To be completely child-friendly change the name of the language to Brainmeddler.

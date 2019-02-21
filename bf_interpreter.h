@@ -13,7 +13,11 @@ public:
   ~BFInterpreter();
 
   void compile();
-
+  
+private:
+  void jumpForwards(int steps);
+  void jumpBackwards(int steps);
+  
 private:
   std::istream &m_Input;
   std::ostream &m_Output;
